@@ -17,6 +17,9 @@ class AuthActivity : AppCompatActivity() {
         btnLogin.setOnClickListener {
             loginWithHuaweiID()
         }
+        btnLogout.setOnClickListener {
+            logoutWithHuaweiID()
+        }
     }
 
     private fun loginWithHuaweiID() {
@@ -30,6 +33,20 @@ class AuthActivity : AppCompatActivity() {
             .createParams()
         val mAuthManager = HuaweiIdAuthManager.getService(this, mAuthParams)
         startActivityForResult(mAuthManager.signInIntent, 1000)
+    }
+
+    private fun logoutWithHuaweiID() {
+        val mAuthParams = HuaweiIdAuthParamsHelper(HuaweiIdAuthParams.DEFAULT_AUTH_REQUEST_PARAM)
+            .createParams()
+        val mAuthManager = HuaweiIdAuthManager.getService(this, mAuthParams)
+        val logoutTask = mAuthManager.signOut()
+        logoutTask.addOnSuccessListener {
+            finish()
+        }
+        logoutTask.addOnFailureListener {
+            Toast.makeText(this, "Logout Fallo!", Toast.LENGTH_LONG).show()
+        }
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
