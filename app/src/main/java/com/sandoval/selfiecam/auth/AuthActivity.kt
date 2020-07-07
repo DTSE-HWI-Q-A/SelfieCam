@@ -1,4 +1,4 @@
-package com.sandoval.selfiecam
+package com.sandoval.selfiecam.auth
 
 import android.app.Activity
 import android.content.Intent
@@ -8,6 +8,8 @@ import android.widget.Toast
 import com.huawei.hms.support.hwid.HuaweiIdAuthManager
 import com.huawei.hms.support.hwid.request.HuaweiIdAuthParams
 import com.huawei.hms.support.hwid.request.HuaweiIdAuthParamsHelper
+import com.sandoval.selfiecam.R
+import com.sandoval.selfiecam.main.MainActivity
 import kotlinx.android.synthetic.main.activity_auth.*
 
 class AuthActivity : AppCompatActivity() {
@@ -16,9 +18,6 @@ class AuthActivity : AppCompatActivity() {
         setContentView(R.layout.activity_auth)
         btnLogin.setOnClickListener {
             loginWithHuaweiID()
-        }
-        btnLogout.setOnClickListener {
-            logoutWithHuaweiID()
         }
     }
 
@@ -35,20 +34,6 @@ class AuthActivity : AppCompatActivity() {
         startActivityForResult(mAuthManager.signInIntent, 1000)
     }
 
-    private fun logoutWithHuaweiID() {
-        val mAuthParams = HuaweiIdAuthParamsHelper(HuaweiIdAuthParams.DEFAULT_AUTH_REQUEST_PARAM)
-            .createParams()
-        val mAuthManager = HuaweiIdAuthManager.getService(this, mAuthParams)
-        val logoutTask = mAuthManager.signOut()
-        logoutTask.addOnSuccessListener {
-            finish()
-        }
-        logoutTask.addOnFailureListener {
-            Toast.makeText(this, "Logout Fallo!", Toast.LENGTH_LONG).show()
-        }
-
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1000) {
@@ -58,11 +43,10 @@ class AuthActivity : AppCompatActivity() {
                 val authHuaweiTask = HuaweiIdAuthManager.parseAuthResultFromIntent(data)
                 if (authHuaweiTask.isSuccessful) {
                     val huaweiAccount = authHuaweiTask.result
-                    Toast.makeText(
-                        this,
-                        "Login Existoso: ${huaweiAccount.displayName}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    val intent = Intent(this@AuthActivity, MainActivity::class.java)
+                    intent.putExtra("dispName", huaweiAccount.displayName)
+                    startActivity(intent)
+                    finish()
                 } else {
                     Toast.makeText(this, "Fallo el login con Huawei ID", Toast.LENGTH_LONG).show()
                 }
