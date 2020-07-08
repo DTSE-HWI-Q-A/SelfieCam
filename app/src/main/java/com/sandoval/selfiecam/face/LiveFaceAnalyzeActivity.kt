@@ -3,15 +3,24 @@ package com.sandoval.selfiecam.face
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import com.huawei.hms.mlsdk.MLAnalyzerFactory
 import com.huawei.hms.mlsdk.common.LensEngine
+import com.huawei.hms.mlsdk.common.MLAnalyzer
+import com.huawei.hms.mlsdk.common.MLResultTrailer
+import com.huawei.hms.mlsdk.face.MLFace
 import com.huawei.hms.mlsdk.face.MLFaceAnalyzer
 import com.huawei.hms.mlsdk.face.MLFaceAnalyzerSetting
+import com.huawei.hms.mlsdk.face.MLMaxSizeFaceTransactor
 import com.sandoval.selfiecam.R
 import com.sandoval.selfiecam.camera.LensEnginePreview
 import com.sandoval.selfiecam.overlay.GraphicOverlay
+import com.sandoval.selfiecam.overlay.LocalFaceGraphic
+import kotlinx.android.synthetic.main.activity_live_face_analyze.*
 import java.io.IOException
 import java.lang.RuntimeException
 
@@ -24,6 +33,10 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
     private var lensType = LensEngine.FRONT_LENS
     private var detectMode = 0
     private var isFront = false
+    private val smilingRate = 0.8f
+    private var safeToTakePicture = false
+    private val smilingPossibility = 0.95f
+    private var restart: Button? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,8 +51,10 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
         } catch (e: RuntimeException) {
             Log.e("LiveFace:", "Get intent value failed: $e")
         }
+        createFaceAnalyzer()
         overlay = findViewById(R.id.face_overlay)
         findViewById<View>(R.id.facingSwitch).setOnClickListener(this)
+        restart = findViewById(R.id.restart)
         createLensEngine()
     }
 
@@ -74,14 +89,25 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
         } else {
             lensType = LensEngine.BACK_LENS
         }
-        if (mLensEngine != null){
+        if (mLensEngine != null) {
             mLensEngine!!.close()
         }
         startPreview(v)
     }
 
-    private fun createLensEngine(){
-        val context: Context = this.applicationContext
+    private val mHandler: Handler = object : Handler() {
+        override fun handleMessage(msg: Message) {
+            super.handleMessage(msg)
+            when (msg.what) {
+                STOP_PREVIEW -> stopPreview()
+                else -> {
+
+                }
+            }
+        }
+    }
+
+    private fun createFaceAnalyzer() {
         val setting = MLFaceAnalyzerSetting.Factory()
             .setFeatureType(MLFaceAnalyzerSetting.TYPE_FEATURES)
             .setKeyPointType(MLFaceAnalyzerSetting.TYPE_UNSUPPORT_KEYPOINTS)
@@ -89,6 +115,85 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
             .setTracingAllowed(true)
             .create()
         analyzer = MLAnalyzerFactory.getInstance().getFaceAnalyzer(setting)
+        if (detectMode == 1003) {
+            val transactor =
+                MLMaxSizeFaceTransactor.Creator(analyzer, object : MLResultTrailer<MLFace?>() {
+                    override fun objectCreateCallback(
+                        itemId: Int,
+                        obj: MLFace?
+                    ) {
+                        overlay!!.clear()
+                        if (obj == null) {
+                            return
+                        }
+                        val faceGraphic = LocalFaceGraphic(
+                            overlay!!,
+                            obj,
+                            this@LiveFaceAnalyzeActivity
+                        )
+                        overlay!!.addGraphic(faceGraphic)
+                        val emotion = obj.emotions
+                        if (emotion.smilingProbability > smilingPossibility) {
+                            Log.d("Possible:", "Take photo")
+                            safeToTakePicture = false
+                        }
+                    }
+
+                    override fun objectUpdateCallback(
+                        var1: MLAnalyzer.Result<MLFace?>?,
+                        obj: MLFace?
+                    ) {
+                        overlay!!.clear()
+                        if (obj == null) {
+                            return
+                        }
+                        val faceGraphic = LocalFaceGraphic(
+                            overlay!!,
+                            obj,
+                            this@LiveFaceAnalyzeActivity
+                        )
+                        overlay!!.addGraphic(faceGraphic)
+                        val emotion = obj.emotions
+                        if (emotion.smilingProbability > smilingPossibility && safeToTakePicture) {
+                            safeToTakePicture = false
+                            Log.d("Possible:", "Take photo")
+                        }
+                    }
+
+                    override fun lostCallback(result: MLAnalyzer.Result<MLFace?>?) {
+                        overlay!!.clear()
+                    }
+
+                    override fun completeCallback() {
+                        overlay!!.clear()
+                    }
+                }).create()
+            analyzer!!.setTransactor(transactor)
+        } else {
+            analyzer!!.setTransactor(object : MLAnalyzer.MLTransactor<MLFace> {
+                override fun destroy() {}
+                override fun transactResult(result: MLAnalyzer.Result<MLFace>) {
+                    val faceSparseArray = result.analyseList
+                    var flag = 0
+                    for (i in 0 until faceSparseArray.size()){
+                        val emotion = faceSparseArray.valueAt(i).emotions
+                        if (emotion.smilingProbability > smilingPossibility){
+                            flag++
+                        }
+                    }
+                    if (flag>faceSparseArray.size()*smilingRate && safeToTakePicture){
+                        safeToTakePicture = false
+                        Log.d("Possible:", "Take photo")
+                    }
+                }
+            })
+        }
+    }
+
+    private fun createLensEngine() {
+        val context: Context = this.applicationContext
+
+
         mLensEngine = LensEngine.Creator(context, analyzer).setLensType(lensType)
             .applyDisplayDimension(640, 480)
             .applyFps(25.0f)
@@ -96,24 +201,36 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
             .create()
     }
 
-    private fun startLensEngine(){
-        if(mLensEngine!=null){
+    private fun startLensEngine() {
+        if (mLensEngine != null) {
             try {
                 if (detectMode == 1003) {
                     mPreview!!.start(mLensEngine, overlay)
                 } else {
                     mPreview!!.start(mLensEngine)
                 }
-            } catch (e: IOException){
+            } catch (e: IOException) {
                 mLensEngine!!.release()
                 mLensEngine = null
             }
         }
     }
 
-    fun startPreview(view: View?){
+    fun startPreview(view: View?) {
+        createFaceAnalyzer()
         mPreview!!.release()
         createLensEngine()
         startLensEngine()
+    }
+
+    fun stopPreview() {
+        restart!!.setVisibility(View.VISIBLE)
+        if (mLensEngine != null) {
+            mLensEngine!!.release()
+        }
+    }
+
+    companion object {
+        private const val STOP_PREVIEW = 1
     }
 }
