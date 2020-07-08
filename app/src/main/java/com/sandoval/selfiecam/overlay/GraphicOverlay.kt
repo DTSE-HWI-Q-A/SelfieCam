@@ -16,7 +16,6 @@ class GraphicOverlay(
     var widthScaleValue = 1.0f
         private set
     var heightScaleValue = 1.0f
-        //Basegraphic
         private set
     var cameraFacing = CameraConfiguration.CAMERA_FACING_FRONT
         private set
@@ -52,7 +51,7 @@ class GraphicOverlay(
                 widthScaleValue =
                     width.toFloat() / previewWidth.toFloat()
                 heightScaleValue =
-                    height.toFloat() / previewWidth.toFloat()
+                    height.toFloat() / previewHeight.toFloat()
             }
             for (graphic in graphics) {
                 graphic.draw(canvas)

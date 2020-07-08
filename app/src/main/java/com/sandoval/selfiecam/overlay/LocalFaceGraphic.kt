@@ -22,7 +22,7 @@ class LocalFaceGraphic(
     init {
         val lineWidth = dp2px(mContext, 1f)
         facePaint = Paint()
-        facePaint.color = Color.parseColor("#ffcc66")
+        facePaint.color = Color.parseColor("#EF484B")
         facePaint.style = Paint.Style.STROKE
         facePaint.strokeWidth = lineWidth
     }
@@ -41,9 +41,9 @@ class LocalFaceGraphic(
             val point = points[i] ?: continue
             if (point.x != null && point.y != null) {
                 if (point.x > horizontalMax) horizontalMax = point.x
-                if (point.x > horizontalMin) horizontalMin = point.x
-                if (point.y > verticalMax) verticalMax = point.x
-                if (point.y > verticalMin) verticalMin = point.x
+                if (point.x < horizontalMin) horizontalMin = point.x
+                if (point.y > verticalMax) verticalMax = point.y
+                if (point.y < verticalMin) verticalMin = point.y
             }
         }
         val rect = Rect(
