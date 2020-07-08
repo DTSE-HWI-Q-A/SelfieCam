@@ -1,6 +1,7 @@
 package com.sandoval.selfiecam.face
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -100,6 +101,7 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
             super.handleMessage(msg)
             when (msg.what) {
                 STOP_PREVIEW -> stopPreview()
+                TAKE_PHOTO -> takePhoto()
                 else -> {
 
                 }
@@ -134,8 +136,8 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
                         overlay!!.addGraphic(faceGraphic)
                         val emotion = obj.emotions
                         if (emotion.smilingProbability > smilingPossibility) {
-                            Log.d("Possible:", "Take photo")
                             safeToTakePicture = false
+                            mHandler.sendEmptyMessage(TAKE_PHOTO)
                         }
                     }
 
@@ -156,7 +158,7 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
                         val emotion = obj.emotions
                         if (emotion.smilingProbability > smilingPossibility && safeToTakePicture) {
                             safeToTakePicture = false
-                            Log.d("Possible:", "Take photo")
+                            mHandler.sendEmptyMessage(TAKE_PHOTO)
                         }
                     }
 
@@ -183,7 +185,7 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
                     }
                     if (flag > faceSparseArray.size() * smilingRate && safeToTakePicture) {
                         safeToTakePicture = false
-                        Log.d("Possible:", "Take photo")
+                        mHandler.sendEmptyMessage(TAKE_PHOTO)
                     }
                 }
             })
@@ -216,6 +218,14 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private fun takePhoto() {
+        mLensEngine!!.photograph(null,
+            LensEngine.PhotographListener { bytes ->
+                mHandler.sendEmptyMessage(STOP_PREVIEW)
+                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            })
+    }
+
     fun startPreview(view: View?) {
         createFaceAnalyzer()
         mPreview!!.release()
@@ -240,5 +250,6 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
 
     companion object {
         private const val STOP_PREVIEW = 1
+        private const val TAKE_PHOTO = 2
     }
 }
