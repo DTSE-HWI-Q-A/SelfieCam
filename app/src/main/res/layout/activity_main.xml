@@ -92,6 +92,7 @@
 
 
         <Button
+            android:id="@+id/mostPeople"
             android:layout_width="310dp"
             android:layout_height="36dp"
             android:layout_gravity="center"
@@ -103,6 +104,7 @@
             android:textSize="16sp"/>
 
         <Button
+            android:id="@+id/nearestPeople"
             android:layout_width="310dp"
             android:layout_height="36dp"
             android:layout_gravity="center"

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Selfie Cam</string>
+    <string name="app_name">HSelfie Cam</string>
     <string name="auth_title">Bienvenido a HSelfie Cam</string>
     <string name="auth_desc">Bienvenido a la mejor camara de selfies. Para usarme, por favor ingresa con tu Huawei ID. Te tomara menos de 1 minuto ingresar a probar esta maravillosa aplicación</string>
     <string name="capture_desc">Existen dos formas de capturar tu selfie. La camara toma tu foto si hay varias personas sonriendo. O toma la foto si hay una persona mas cerca sonriendo. Tu decides!</string>
