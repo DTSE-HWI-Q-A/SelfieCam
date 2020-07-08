@@ -19,6 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/HuaweiTheme"
         tools:ignore="AllowBackup">
+        <activity android:name=".face.LiveFaceAnalyzeActivity"/>
         <activity android:name=".main.MainActivity" />
         <activity android:name=".auth.AuthActivity">
             <intent-filter>
