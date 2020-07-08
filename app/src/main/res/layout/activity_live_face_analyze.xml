@@ -21,4 +21,30 @@
 
     </com.sandoval.selfiecam.camera.LensEnginePreview>
 
+    <Button
+        android:id="@+id/facingSwitch"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="30dp"
+        android:background="@drawable/front_back_switch"
+        android:textOff=""
+        android:textOn="" />
+
+    <Button
+        android:id="@+id/restart"
+        android:layout_width="33dp"
+        android:layout_height="33dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="30dp"
+        android:background="@drawable/restart"
+        android:gravity="start"
+        android:onClick="startPreview"
+        android:textOff=""
+        android:textOn=""
+        android:visibility="visible" />
+
 </RelativeLayout>
