@@ -15,11 +15,12 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher_huawei"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_huawei_round"
         android:supportsRtl="true"
         android:theme="@style/HuaweiTheme"
         tools:ignore="AllowBackup">
-        <activity android:name=".face.LiveFaceAnalyzeActivity"/>
+        <activity android:name=".face.LiveFaceAnalyzeActivity" />
         <activity android:name=".main.MainActivity" />
         <activity android:name=".auth.AuthActivity">
             <intent-filter>

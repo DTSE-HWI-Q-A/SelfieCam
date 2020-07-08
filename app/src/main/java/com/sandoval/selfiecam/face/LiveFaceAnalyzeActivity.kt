@@ -1,7 +1,10 @@
 package com.sandoval.selfiecam.face
 
 import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -22,6 +25,8 @@ import com.sandoval.selfiecam.R
 import com.sandoval.selfiecam.camera.LensEnginePreview
 import com.sandoval.selfiecam.overlay.GraphicOverlay
 import com.sandoval.selfiecam.overlay.LocalFaceGraphic
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.lang.RuntimeException
 
@@ -223,7 +228,32 @@ class LiveFaceAnalyzeActivity : AppCompatActivity(), View.OnClickListener {
             LensEngine.PhotographListener { bytes ->
                 mHandler.sendEmptyMessage(STOP_PREVIEW)
                 val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                saveBitmapToGallery(bitmap)
             })
+    }
+
+    private fun saveBitmapToGallery(bitmap: Bitmap): String {
+        val appDir = File("/storage/emulated/0/DCIM/Camera")
+        if (!appDir.exists()) {
+            val res: Boolean = appDir.mkdir()
+            if (!res) {
+                Log.e("FaceAnalyze", "saveBitmapToDisk failed")
+                return ""
+            }
+        }
+        val fileName = "HSefilDemo" + System.currentTimeMillis() + ".jpg"
+        val file = File(appDir, fileName)
+        try {
+            val fos = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)
+            fos.flush()
+            fos.close()
+            val uri: Uri = Uri.fromFile(file)
+            this.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri))
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return file.absolutePath
     }
 
     fun startPreview(view: View?) {
